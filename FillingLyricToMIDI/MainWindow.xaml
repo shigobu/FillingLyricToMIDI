@@ -5,8 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FillingLyricToMIDI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="歌詞流し込みツール" Height="400" Width="400" MinWidth="200" MinHeight="200" UseLayoutRounding="True">
+    <DockPanel Margin="5">
+        <DockPanel DockPanel.Dock="Top">
+            <Button DockPanel.Dock="Right" Content="MIDIファイル選択" Width="100" Margin="3" Click="FileSelectButton_Click"/>
+            <TextBox x:Name="MidiFileNameTextBox" Margin="3"/>
+        </DockPanel>
+        <Button DockPanel.Dock="Top" Content="解析実行" Margin="3" Click="ExecuteButton_Click"/>
+        <Button x:Name="SaveButton" DockPanel.Dock="Bottom" Content="保存" Margin="3" Click="SaveButton_Click" IsEnabled="False"/>
+        <Border BorderBrush="Black" BorderThickness="1" Margin="3">
+            <ScrollViewer>
+                <StackPanel x:Name="OutputStackPanel">
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </DockPanel>
 </Window>
