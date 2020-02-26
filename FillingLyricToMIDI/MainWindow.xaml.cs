@@ -44,9 +44,35 @@ namespace FillingLyricToMIDI
         /// </summary>
         List<MeasureAndTextBox> Measures { get; set; } = new List<MeasureAndTextBox>();
 
+		MIDITrack TargetTrack
+		{
+			get
+			{
+				if (MidiData == null)
+				{
+					return null;
+				}
+
+				switch (MidiData.Format)
+				{
+					case MIDIData.Formats.Format0:
+						return MidiData[0];
+					case MIDIData.Formats.Format1:
+						return MidiData[1];
+					case MIDIData.Formats.Format2:
+						MessageBox.Show("Format2には対応していません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+						return null;
+					default:
+						MessageBox.Show("不明なフォーマットです。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+						return null;
+				}
+			}
+		}
+
         public MainWindow()
         {
             InitializeComponent();
+			MIDIDataLib.SetDefaultCharCode(MIDIEvent.CharCodes.JP);
         }
 
         #region イベントハンドラ
@@ -66,15 +92,10 @@ namespace FillingLyricToMIDI
 
         private void ExecuteButton_Click(object sender, RoutedEventArgs e)
         {
-            //テキストボックステスト
-            for (int i = 0; i < 10; i++)
-            {
-                AddTextBox(i);
-            }
-            SaveButton.IsEnabled = true;
-            return;
+			OutputStackPanel.Children.Clear();
+			Measures.Clear();
 
-            if (!File.Exists(MidiFileName))
+			if (!File.Exists(MidiFileName))
             {
                 return;
             }
@@ -95,24 +116,14 @@ namespace FillingLyricToMIDI
                 return;
             }
 
-            MIDITrack track = null;
-            switch (MidiData.Format)
-            {
-                case MIDIData.Formats.Format0:
-                    track = MidiData[0];
-                    break;
-                case MIDIData.Formats.Format1:
-                    track = MidiData[1];
-                    break;
-                case MIDIData.Formats.Format2:
-                    MessageBox.Show("Format2には対応していません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                default:
-                    MessageBox.Show("不明なフォーマットです。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-            }
-            //結合できるイベントを結合
-            foreach (MIDIEvent midiEvent in track)
+            MIDITrack track = TargetTrack;
+			if (track == null)
+			{
+				MessageBox.Show("未対応のフォーマットです。\n対応フォーマットは「Format0」と「Format1」です。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+				return;
+			}
+			//結合できるイベントを結合
+			foreach (MIDIEvent midiEvent in track)
             {
                 if (midiEvent.IsNoteOn)            //ノートONで
                 {
@@ -164,7 +175,9 @@ namespace FillingLyricToMIDI
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog fileDialog = new SaveFileDialog
+			MakeLyric(TargetTrack, Measures);
+
+			SaveFileDialog fileDialog = new SaveFileDialog
             {
                 Filter = "MIDIファイル|*.mid",
                 InitialDirectory = Path.GetDirectoryName(MidiFileName),
@@ -206,6 +219,85 @@ namespace FillingLyricToMIDI
             return textBox;
         }
 
-        #endregion メソッド
-    }
+		/// <summary>
+		/// MIDIデータに歌詞を追加します。
+		/// </summary>
+		private void MakeLyric(MIDITrack midiTrack, List<MeasureAndTextBox> measures)
+		{
+			RemoveLyric(midiTrack);
+
+			foreach (MeasureAndTextBox measure in measures)
+			{
+				StringBuilder stringBuilder = new StringBuilder(measure.Lyric);
+				for (int i = 0; i < measure.MidiEvent.Length; i++)
+				{
+					if (stringBuilder.Length <= 0)
+					{
+						break;
+					}
+					string lyricChar = stringBuilder[0].ToString(); //先頭の文字を取得
+					stringBuilder.Remove(0, 1);                     //先頭の文字を削除
+					//次の文字が小文字の場合、一緒に歌詞に含める。
+					if (IsFirstCharacterLowerCase(stringBuilder.ToString()))
+					{
+						lyricChar += stringBuilder[0].ToString();   //先頭の文字を追加
+						stringBuilder.Remove(0, 1);                 //先頭の文字を削除
+					}
+
+					MIDIEvent targetEvent = measure.MidiEvent[i];
+					MIDIEvent lyricEvent = MIDIEvent.CreateLyric(targetEvent.Time, lyricChar);
+					midiTrack.InsertEventAfter(lyricEvent, targetEvent);
+				}
+			}
+		}
+		
+		/// <summary>
+		/// MIDIデータから歌詞を削除します。
+		/// </summary>
+		public void RemoveLyric(MIDITrack midiTrack)
+		{
+			List<MIDIEvent> lyricEvents = new List<MIDIEvent>();
+
+			//ループ中にイベントを除外又は削除してはならない。イベントの消滅により次のイベントが探索できなくなるからだ。
+			foreach (MIDIEvent midiEvent in midiTrack)
+			{
+				if (midiEvent.IsLyric)
+				{
+					lyricEvents.Add(midiEvent);
+				}
+			}
+
+			foreach (MIDIEvent midiEvent in lyricEvents)
+			{
+				midiTrack.RemoveEvent(midiEvent);
+			}
+		}
+
+		/// <summary>
+		/// 先頭文字が小文字が判定します。
+		/// </summary>
+		/// <param name="str">判定する文字列</param>
+		/// <returns>小文字の場合true</returns>
+		private bool IsFirstCharacterLowerCase(string str)
+		{
+			if (string.IsNullOrWhiteSpace(str))
+			{
+				return false;
+			}
+			char firstChar = str[0];
+			string lowerCases = "ぁぃぅぇぉゃゅょっ";
+			int index = lowerCases.IndexOf(firstChar);
+
+			if (index >= 0)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		#endregion メソッド
+	}
 }

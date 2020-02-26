@@ -21,6 +21,21 @@ namespace FillingLyricToMIDI
         /// </summary>
         public MIDIEvent[] MidiEvent { get; set; }
 
+		/// <summary>
+		/// 歌詞
+		/// </summary>
+		public string Lyric
+		{
+			get
+			{
+				return LyricTextBox.Text;
+			}
+			set
+			{
+				LyricTextBox.Text = value;
+			}
+		}
+
         public MeasureAndTextBox(TextBox lyricTextBox)
         {
             LyricTextBox = lyricTextBox;
