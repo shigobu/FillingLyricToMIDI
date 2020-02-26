@@ -65,7 +65,15 @@ namespace FillingLyricToMIDI
                 return;
             }
 
-            MidiData = new MIDIData(MidiFileName);
+            try
+            {
+                MidiData = new MIDIData(MidiFileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return;
+            }
             MIDITrack track = null;
             switch (MidiData.Format)
             {
