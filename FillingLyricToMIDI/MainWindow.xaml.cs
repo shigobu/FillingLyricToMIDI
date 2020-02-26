@@ -154,7 +154,7 @@ namespace FillingLyricToMIDI
         /// 出力部分にテキストボックスを追加します。左側には、小節番号が付きます。
         /// </summary>
         /// <param name="measureNumber">小節番号</param>
-        private void AddTextBox(int measureNumber)
+        private TextBox AddTextBox(int measureNumber)
         {
             TextBlock textBlock = new TextBlock()
             {
@@ -171,6 +171,8 @@ namespace FillingLyricToMIDI
             DockPanel.SetDock(textBlock, Dock.Left);
 
             OutputStackPanel.Children.Add(docPanel);
+
+            return textBox;
         }
 
         #endregion メソッド
