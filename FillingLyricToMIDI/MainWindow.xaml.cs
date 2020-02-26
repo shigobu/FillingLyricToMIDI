@@ -84,6 +84,13 @@ namespace FillingLyricToMIDI
                 MessageBox.Show(ex.Message);
                 return;
             }
+
+            if (MidiData.TimeMode != MIDIData.TimeModes.TPQN)
+            {
+                MessageBox.Show("TPQN以外の形式には対応していません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             MIDITrack track = null;
             switch (MidiData.Format)
             {
