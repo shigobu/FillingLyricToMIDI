@@ -40,6 +40,9 @@ namespace FillingLyricToMIDI
             }
         }
 
+        /// <summary>
+        /// 結果に表示する小節の配列
+        /// </summary>
         List<MeasureAndTextBox> Measures { get; set; } = new List<MeasureAndTextBox>();
 
         public MainWindow()
@@ -137,7 +140,7 @@ namespace FillingLyricToMIDI
                             events.Clear();
                         }
 
-                        TextBox textBox = AddTextBox(measure);
+                        TextBox textBox = AddTextBox(measure);                      //ここで作成しないと、小節番号がわからない。
                         Measures.Add(new MeasureAndTextBox(textBox));
 
                         events.Add(midiEvent);
