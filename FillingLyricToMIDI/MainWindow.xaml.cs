@@ -12,7 +12,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using MIDIDataCSWrapper;
 using System.IO;
 
@@ -72,7 +71,7 @@ namespace FillingLyricToMIDI
             {
                 AddTextBox(i);
             }
-
+            SaveButton.IsEnabled = true;
             return;
 
             if (!File.Exists(MidiFileName))
@@ -167,7 +166,9 @@ namespace FillingLyricToMIDI
         {
             SaveFileDialog fileDialog = new SaveFileDialog
             {
-                Filter = "MIDIファイル|*.mid"
+                Filter = "MIDIファイル|*.mid",
+                InitialDirectory = Path.GetDirectoryName(MidiFileName),
+                FileName = Path.GetFileName(MidiFileName),
             };
             bool dialogResult = fileDialog.ShowDialog(this) ?? false; //戻り値がnullの場合、falseを代入
             if (dialogResult)
