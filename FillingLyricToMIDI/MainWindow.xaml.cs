@@ -45,6 +45,8 @@ namespace FillingLyricToMIDI
             InitializeComponent();
         }
 
+        #region イベントハンドラ
+
         private void FileSelectButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog fileDialog = new OpenFileDialog
@@ -55,11 +57,19 @@ namespace FillingLyricToMIDI
             if (dialogResult)
             {
                 MidiFileName = fileDialog.FileName;
-            } 
+            }
         }
 
         private void ExecuteButton_Click(object sender, RoutedEventArgs e)
         {
+            //テキストボックステスト
+            for (int i = 0; i < 10; i++)
+            {
+                AddTextBox(i);
+            }
+
+            return;
+
             if (!File.Exists(MidiFileName))
             {
                 return;
@@ -89,13 +99,32 @@ namespace FillingLyricToMIDI
                     return;
             }
             //結合できるイベントを結合
-            foreach (MIDIEvent @event in track)
+            foreach (MIDIEvent midiEvent in track)
             {
-                if (@event.IsNoteOn)            //ノートONで
+                if (midiEvent.IsNoteOn)            //ノートONで
                 {
-                    if (!@event.IsCombined)     //結合されていない場合
+                    if (!midiEvent.IsCombined)     //結合されていない場合
                     {
-                        @event.Combine();
+                        midiEvent.Combine();
+                    }
+                }
+            }
+
+            int currentMeasure = -1;
+            //ノートのある小節の個数分、テキストボックス追加
+            foreach (MIDIEvent midiEvent in track)
+            {
+                if (midiEvent.IsNote)
+                {
+                    int measure = MidiData.BreakTime(midiEvent.Time).Measure;       //このノートの含まれている小節取得
+                    if (measure > currentMeasure)
+                    {
+                        AddTextBox(measure);
+                        currentMeasure = measure;
+                    }
+                    else
+                    {
+                        //何もしない
                     }
                 }
             }
@@ -116,5 +145,34 @@ namespace FillingLyricToMIDI
                 MidiData?.SaveAsSMF(fileDialog.FileName);   //nullなら実行されない
             }
         }
+
+        #endregion イベントハンドラ
+
+        #region メソッド
+
+        /// <summary>
+        /// 出力部分にテキストボックスを追加します。左側には、小節番号が付きます。
+        /// </summary>
+        /// <param name="measureNumber">小節番号</param>
+        private void AddTextBox(int measureNumber)
+        {
+            TextBlock textBlock = new TextBlock()
+            {
+                Margin = new Thickness(3),
+                Text = measureNumber.ToString("D3")
+            };
+            TextBox textBox = new TextBox()
+            {
+                Margin = new Thickness(3)
+            };
+            DockPanel docPanel = new DockPanel();
+            docPanel.Children.Add(textBlock);
+            docPanel.Children.Add(textBox);
+            DockPanel.SetDock(textBlock, Dock.Left);
+
+            OutputStackPanel.Children.Add(docPanel);
+        }
+
+        #endregion メソッド
     }
 }
