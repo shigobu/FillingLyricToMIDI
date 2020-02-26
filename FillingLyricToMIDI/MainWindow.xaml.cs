@@ -101,8 +101,10 @@ namespace FillingLyricToMIDI
                     track = MidiData[1];
                     break;
                 case MIDIData.Formats.Format2:
+                    MessageBox.Show("Format2には対応していません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 default:
+                    MessageBox.Show("不明なフォーマットです。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
             }
             //結合できるイベントを結合
