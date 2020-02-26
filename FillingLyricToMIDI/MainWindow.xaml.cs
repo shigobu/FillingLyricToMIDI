@@ -40,6 +40,8 @@ namespace FillingLyricToMIDI
             }
         }
 
+        List<MeasureAndTextBox> Measures { get; set; } = new List<MeasureAndTextBox>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -120,24 +122,40 @@ namespace FillingLyricToMIDI
             }
 
             int currentMeasure = -1;
+            List<MIDIEvent> events = new List<MIDIEvent>();                         //一小節分のノートイベントを保管する。
             //ノートのある小節の個数分、テキストボックス追加
             foreach (MIDIEvent midiEvent in track)
             {
-                if (midiEvent.IsNote)
+                if (midiEvent.IsNoteOn)
                 {
-                    int measure = MidiData.BreakTime(midiEvent.Time).Measure;       //このノートの含まれている小節取得
-                    if (measure > currentMeasure)
+                    int measure = MidiData.BreakTime(midiEvent.Time).Measure;       //このノートの所属している小節取得
+                    if (measure > currentMeasure)                                   //次の小節に行ったら
                     {
-                        AddTextBox(measure);
+                        if (events.Count != 0)                                      //小節へイベントの追加、その後クリア
+                        {
+                            Measures.Last().MidiEvent = events.ToArray();
+                            events.Clear();
+                        }
+
+                        TextBox textBox = AddTextBox(measure);
+                        Measures.Add(new MeasureAndTextBox(textBox));
+
+                        events.Add(midiEvent);
+
                         currentMeasure = measure;
                     }
                     else
                     {
-                        //何もしない
+                        events.Add(midiEvent);
                     }
                 }
             }
-
+            //最後のイベント追加
+            if (events.Count != 0)
+            {
+                Measures.Last().MidiEvent = events.ToArray();
+                events.Clear();
+            }
 
             SaveButton.IsEnabled = true;
         }
